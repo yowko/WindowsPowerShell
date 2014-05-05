@@ -51,6 +51,9 @@ cinst fiddler4
 # Install Process Explorer
 cinst procexp 
 
+# Install Paint.NET
+cinst paint.net
+
 # Install WinDbg
 cinst windbg
 
