@@ -29,9 +29,9 @@ cinst GoogleChrome
 # Install Firefox
 cinst Firefox
 
-# Install VS2013 Ultimate
+# Install VS2013 Premium
 # To include you product key, include the following in the InstallArguments: /ProductKey:<your key here>
-cinst VisualStudio2013Ultimate -InstallArguments "/Features:'Blend VC_MFC_Libraries WebTools SQL WebTools Win8SDK SilverLight_Developer_Kit WindowsPhone80'"
+cinst VisualStudio2013Premium -InstallArguments "/Features:'Blend VC_MFC_Libraries WebTools SQL WebTools Win8SDK SilverLight_Developer_Kit WindowsPhone80'"
 
 # Install ReSharper
 cinst resharper
