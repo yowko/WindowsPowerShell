@@ -1,0 +1,1 @@
+. "$(Split-Path $MyInvocation.MyCommand.Path)\Microsoft.PowerShell_profile.ps1"
