@@ -42,9 +42,6 @@ cinst gitextensions
 # Install Beyond Compare
 cinst beyondcompare
 
-# Install posh-git
-cinst poshgit
-
 # Install WebStorm
 cinst WebStorm
 
@@ -58,11 +55,11 @@ cinst procexp
 cinst windbg
 
 # Configure IIS
-cinst IIS-WebServerRole -source windowsfeatures 
-cinst IIS-ISAPIFilter -source windowsfeatures 
-cinst IIS-ISAPIExtensions -source windowsfeatures 
-cinst IIS-NetFxExtensibility -source windowsfeatures 
-cinst IIS-ASPNET -source windowsfeatures 
+# cinst IIS-WebServerRole -source windowsfeatures 
+# cinst IIS-ISAPIFilter -source windowsfeatures 
+# cinst IIS-ISAPIExtensions -source windowsfeatures 
+# cinst IIS-NetFxExtensibility -source windowsfeatures 
+# cinst IIS-ASPNET -source windowsfeatures 
 
 Write-Host @"
 
