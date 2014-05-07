@@ -2,7 +2,8 @@
 
 set-strictmode -version latest
 
-$env:path = $env:path + ";$([System.IO.Path]::GetDirectoryName($profile))"
+$profileDirectory = Split-Path $profile
+$env:path = $env:path + ";$profileDirectory"
 
 define-location scripts ([System.IO.Path]::GetDirectoryName($profile))
 define-location desk ~\Desktop
