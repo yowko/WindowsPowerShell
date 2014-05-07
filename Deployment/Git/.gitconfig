@@ -23,7 +23,7 @@
 	keepBackup = false
 	prompt = false
 [credential]
-	helper = !\\\"C:/Program Files (x86)/GitExtensions/GitCredentialWinStore/git-credential-winstore.exe\\\"
+	helper = !\"C:/Program Files (x86)/GitExtensions/GitCredentialWinStore/git-credential-winstore.exe\"
 [difftool "BeyondCompare3"]
 	path = C:/Program Files (x86)/Beyond Compare 3/bcomp.exe
 [difftool "beyondcompare3"]
