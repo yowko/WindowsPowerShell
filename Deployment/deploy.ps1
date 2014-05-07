@@ -13,6 +13,19 @@ if(-not $isAdmin)
    return
 }
 
+# Create symbolic link to the "public" .gitconfig and create a .gitconfig_private for "private" stuff
+if(-not (Test-Path "$HOME\.gitconfig"))
+{
+    Write-Host 'Create symbolic link to the "public" .gitconfig'
+    Invoke-Expression "cmd /c mklink '$HOME\.gitconfig' '$(Split-Path $PROFILE)\Deployment\Git\.gitconfig'"
+    if(-not (Test-Path "$HOME\.gitconfig_private"))
+    {
+        Write-Host 'Create a .gitconfig_private for "private" stuff'
+        '' | Set-Content "$HOME\.gitconfig_private" -Encoding ascii
+    }
+}
+pause
+
 # Install Chocolatey
 Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 $env:PATH += ";$env:SystemDrive\chocolatey\bin"

@@ -1,11 +1,12 @@
+[include]
+	path = ~/.gitconfig_private
 [help]
 	autocorrect = 1
 [color]
 	ui = auto
 [core]
-	autocrlf = true
+	autocrlf = false
 	editor = 'C:/Program Files (x86)/Notepad++/notepad++.exe' -multiInst -nosession -noPlugin
-	excludesfile = ~/.gitignore_global
 [diff]
 	tool = bc3
 	guitool = beyondcompare3
