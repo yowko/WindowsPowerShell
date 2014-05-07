@@ -54,6 +54,8 @@ function prompt
 
 Import-Module posh-git
 Enable-GitColors
+$global:GitPromptSettings.WorkingForegroundColor = [ConsoleColor]::Gray 
+$global:GitPromptSettings.UntrackedForegroundColor = [ConsoleColor]::Gray
 
 # Load posh-git example profile
 # . 'C:\Users\Rafael\Documents\WindowsPowerShell\Modules\posh-git\profile.example.ps1'
