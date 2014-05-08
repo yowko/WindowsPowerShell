@@ -1,5 +1,7 @@
 . "$(Split-Path $MyInvocation.MyCommand.Path)\Microsoft.PowerShell_profile.ps1"
 
+$global:GitPromptSettings.IndexForegroundColor = [ConsoleColor]::Green
+
 # PowerShell ISE version of the VIM blackboard theme at 
 # http://www.vim.org/scripts/script.php?script_id=2280
 
