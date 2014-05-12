@@ -39,11 +39,17 @@ The name of the database.
 
 The instance name of the Database Engine.
 
-.PARAMETER SchemaVersionPropertyName
+.PARAMETER VersionTableSchema
 
-Specifies the name of the database property used to store the schema version.
+Specifies the name of the schema used to store the version history.
 
-The default value is 'DB.Migration.SchemaVersion'
+The default value is 'migration'
+
+.PARAMETER VersionTableName
+
+Specifies the name of the table used to store the version history.
+
+The default value is 'SchemaHistory'
 
 .PARAMETER Reset
 
@@ -58,7 +64,7 @@ Specifies the path to use to scan for migration scripts.
 
 The default value is the current directory.
 
-.PARAMETER AlwaysRunScriptPath
+.PARAMETER RunScriptFilePathAfter
 
 Specifies the path to a SQL script that should always be run after running all of 
 the versioned SQL scripts.
@@ -82,7 +88,7 @@ the ensuing prompt. Any SQL scripts in the current directory that have the
 
 .EXAMPLE
 
-Initialize-Database MySuperCoolDB -AlwaysRunScriptPath .\develop.sql
+Initialize-Database MySuperCoolDB -RunScriptFilePathAfter .\develop.sql
 
 Initializes a database called MySuperCoolDB. If the database does not exist, it will
 be created. Any SQL scripts in the current directory that have the <integer>.sql
@@ -100,7 +106,10 @@ param
     [string]$ServerInstance = $null,
 
     [Parameter()]
-    [string]$SchemaVersionPropertyName = 'DB.Migration.SchemaVersion',
+    [string]$VersionTableSchema = 'migration',
+
+    [Parameter()]
+    [string]$VersionTableName = 'SchemaVersion',
 
     [Parameter()]
     [switch]$Reset,
@@ -109,7 +118,7 @@ param
     [string]$MigrationScriptDirectoryPath = '.',
 
     [Parameter()]
-    [string[]]$AlwaysRunScriptFilePath,
+    [string[]]$RunScriptFilePathAfter,
 
     [Parameter()]
     [switch]
@@ -198,15 +207,8 @@ function PerformMigration
         Write-Host "`t$($_.Name)"
     }
 
-    $nextSchemaVersionValue = `
-        GetNextSchemaVersion `
-            -MigrationScriptFilesToApply $migrationScriptFilesToApply `
-            -CurrentSchemaVersionValue $currentSchemaVersionProperty.Value
-
     ApplyMigrationScripts `
-        -MigrationScriptFilesToApply $migrationScriptFilesToApply `
-        -NextSchemaVersionValue $nextSchemaVersionValue `
-        -SchemaVersionPropertyIsPresent $currentSchemaVersionProperty.IsPresent
+        -MigrationScriptFilesToApply $migrationScriptFilesToApply
 
     $currentSchemaVersionProperty = GetCurrentSchemaVersionProperty
     Write-Host "Database is now at schema version $($currentSchemaVersionProperty.Value)."
@@ -215,22 +217,12 @@ function PerformMigration
 function GetCurrentSchemaVersionProperty
 {
     $currentSchemaVersionProperty = InvokeSqlCmd @commonSqlCmdParams -Database $Database -Query @"
-        SELECT value
-        FROM fn_listextendedproperty(
-            N'$SchemaVersionPropertyName',
-            default,
-            default,
-            default,
-            default,
-            default,
-            default)
+        IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '$VersionTableSchema' AND  TABLE_NAME = '$VersionTableName')
+        BEGIN
+            SELECT TOP 1 Version as Value FROM $VersionTableSchema.$VersionTableName
+            ORDER BY Version DESC
+        END
 "@
-
-    $isPresent = $true
-    if(-not $currentSchemaVersionProperty)
-    {
-        $isPresent = $false
-    }
 
     $isValid = $true
     if(-not $currentSchemaVersionProperty -or
@@ -243,7 +235,6 @@ function GetCurrentSchemaVersionProperty
     }
 
     return $currentSchemaVersionProperty |
-        Add-Member -MemberType NoteProperty -Name IsPresent -Value $isPresent -PassThru |
         Add-Member -MemberType NoteProperty -Name IsValid -Value $isValid -PassThru
 }
 
@@ -276,38 +267,14 @@ function GetMigrationScriptFilesToApply
         } |
         Sort-Object SchemaVersion)
 
-    if($AlwaysRunScriptFilePath)
+    if($RunScriptFilePathAfter)
     {
-        $migrationScriptFilesToApply += $AlwaysRunScriptFilePath |
+        $migrationScriptFilesToApply += $RunScriptFilePathAfter |
             dir |
             Add-Member -MemberType NoteProperty -Name SchemaVersion -Value $null -PassThru
     }
 
     return $migrationScriptFilesToApply
-}
-
-function GetNextSchemaVersion
-{
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory=$true)]
-        $MigrationScriptFilesToApply,
-
-        [Parameter(Mandatory=$true)]
-        $CurrentSchemaVersionValue
-    )
-
-    $nextSchemaVersionValue = $MigrationScriptFilesToApply |
-        Where-Object { $_.SchemaVersion -ne $null } |
-        Select-Object -Last 1 -ExpandProperty SchemaVersion
-
-    if(-not $nextSchemaVersionValue)
-    {
-        $nextSchemaVersionValue = $CurrentSchemaVersionValue
-    }
-
-    return $nextSchemaVersionValue
 }
 
 function ApplyMigrationScripts
@@ -317,18 +284,34 @@ function ApplyMigrationScripts
     (
         [Parameter(Mandatory=$true)]
         [System.IO.FileInfo[]]
-        $MigrationScriptFilesToApply,
-
-        [Parameter(Mandatory=$true)]
-        [int]
-        $NextSchemaVersionValue,
-
-        [Parameter(Mandatory=$true)]
-        [bool]
-        $SchemaVersionPropertyIsPresent
+        $MigrationScriptFilesToApply
     )
 
     $migrationScripts = @()
+
+    # Create version history schema and table if necessary
+    $migrationScripts += @"
+        IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = '$VersionTableSchema')
+        BEGIN
+            EXEC('
+            CREATE SCHEMA [$VersionTableSchema]
+            ')
+        END
+
+        GO
+
+        IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '$VersionTableSchema' AND  TABLE_NAME = '$VersionTableName')
+        BEGIN
+            CREATE TABLE $VersionTableSchema.$VersionTableName
+	        (
+	            Version int IDENTITY (1, 1) NOT NULL,
+	            AppliedOnDateTime datetime2(7) NOT NULL
+                CONSTRAINT [PK_SchemaVersion] PRIMARY KEY CLUSTERED 
+	        )  ON [PRIMARY]
+        END
+"@
+
+    # Fold in all the migration scripts
     for($i = 0; $i -lt $MigrationScriptFilesToApply.Length; ++$i)
     {
         $migrationScriptFile = $MigrationScriptFilesToApply[$i]
@@ -349,23 +332,17 @@ function ApplyMigrationScripts
         }
 
         $migrationScripts += $migrationScript -join "`n"
-    }
 
-    if($SchemaVersionPropertyIsPresent)
-    {
-        $migrationScripts += @"
-            EXEC sys.sp_updateextendedproperty 
-            @name = N'$SchemaVersionPropertyName', 
-            @value = $NextSchemaVersionValue
+        # Insert the schema version into the version history table
+        if($migrationScriptFile.SchemaVersion)
+        {
+            $migrationScripts += @"
+                SET IDENTITY_INSERT $VersionTableSchema.$VersionTableName ON
+                INSERT INTO $VersionTableSchema.$VersionTableName (Version,AppliedOnDateTime)
+                VALUES ($($migrationScriptFile.SchemaVersion),SYSDATETIME())
+                SET IDENTITY_INSERT $VersionTableSchema.$VersionTableName OFF
 "@
-    }
-    else
-    {
-        $migrationScripts += @"
-            EXEC sys.sp_addextendedproperty 
-            @name = N'$SchemaVersionPropertyName', 
-            @value = $NextSchemaVersionValue
-"@
+        }
     }
 
     # Preemptively print out the header for the first script so that if there's any
