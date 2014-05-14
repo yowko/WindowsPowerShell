@@ -8,7 +8,7 @@ $env:path = $env:path + ";$profileDirectory"
 define-location scripts ([System.IO.Path]::GetDirectoryName($profile))
 define-location desk ~\Desktop
 define-location docs ~\Documents
-define-location repos ~\Documents\code\Projects
+define-location repos ~\Documents\Projects
 
 #aliases
 set-alias u goto-ancestor
