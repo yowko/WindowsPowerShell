@@ -11,15 +11,24 @@ if($file -and -not (Test-Path $file))
     '' | Set-Content -Path $file -Encoding Ascii
 }
 
+$file = Resolve-Path $file
+
 if(Test-Path variable:\psISE)
 {
     psEdit $file
     return
 }
 
+if(Test-Path variable:\PGSE)
+{
+    $PGSE.DocumentWindows.Add($file)
+    return 
+}
+
 if($psExtensions -contains [System.IO.Path]::GetExtension($file))
 {
-    & PowerShell_ISE.exe $file
+    $powershellEditor = Get-PowerShellEditor.ps1
+    & $powershellEditor $file
     return
 }
 
