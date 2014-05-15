@@ -357,9 +357,11 @@ SET IDENTITY_INSERT $VersionTableSchema.$VersionTableName OFF
     
     #region Let's do this thing
 
+    Start-Transaction
     ResetDatabaseIfNecessary
     EnsureDatabaseExists
     PerformMigration
+    Complete-Transaction
 
     #endregion Let's do this thing
 }
@@ -367,67 +369,6 @@ SET IDENTITY_INSERT $VersionTableSchema.$VersionTableName OFF
 #endregion Public Functions
 
 #region Private Functions
-
-function SplitGoStatements
-{
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)]
-        [PSObject]$Script
-    )
-    
-    begin
-    {
-        # Ensure that statements that precede a GO statement
-        # are in their own batch since the GO statement isn't valid
-        # Transact-SQL: http://technet.microsoft.com/en-us/library/ms188037.aspx
-        $goStatementLineRegex = "^\s*?"     + # A GO line starts with possibly 0 or more spaces
-                                "GO"        + # followed by the word "GO"
-                                "\s*?"      + # followed by possibly 0 or more spaces
-                                "(--.*?)?$"   # possibly ending with a comment            
-    }
-    
-    process
-    {                                
-        $sourceFilePath = $Script | GetSourceFilePath
-        $normalizedLineEndings = $Script -replace "`r`n","`n"
-        $commandBatches = $normalizedLineEndings -split $goStatementLineRegex,0,"multiline"
-        
-        # Go through each of the command batches and enrich each with line number offset
-        # information so that if an error occurs, we can accurately report the line number
-        # as it appeared in the overall script that it appeared in (i.e. when ADO.NET reports
-        # line numbers, it's going to be relative to the begining of the batch)
-        $lineOffset = 0
-        foreach($commandBatch in $commandBatches)
-        {
-            # Ok...so since ADO.NET reports line numbers based on the first non-empty line
-            # we need to account for how many empty lines lead up to the first non-empty line
-            # to come up with the correct offset that ADO.NET will be basing its line numbers
-            # off of
-            $match = [regex]::Match($commandBatch,'[^\s]')
-            if($match.Success)
-            {
-                $emptyLineCount = ($commandBatch.Substring(0, $match.Index) | Measure-Object -Line).Lines
-                $lineOffset += $emptyLineCount
-                
-                # Trim off all the whitespace that ADO.NET is going to ignore anyway
-                $commandBatch = $commandBatch.Substring($match.Index)                
-            }
-       
-            if(-not [string]::IsNullOrWhiteSpace($commandBatch))
-            {
-                # Add the line offset to the string so that the caller can calculate the line number
-                # in the event of an error
-                $commandBatch | 
-                    Add-Member -MemberType NoteProperty -Name LineOffset -Value $lineOffset -PassThru |
-                    AddSourceFilePath $sourceFilePath
-            }
-            
-            $lineOffset += ($commandBatch | Measure-Object -Line).Lines
-        }
-    }
-}    
 
 function AddSourceFilePath
 {
@@ -475,7 +416,7 @@ function GetSourceFilePath
 # - Report accurate line number information in the face of GO statements
 function InvokeSqlCmd
 {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsTransactions=$true)]
     param
     (
         [Parameter(Mandatory=$true, Position=0)]
@@ -485,9 +426,6 @@ function InvokeSqlCmd
         [PSObject]$Query,
 
         [Parameter()]
-        [switch]$UseTransaction,
-
-        [Parameter()]
         [string]$ServerInstance = 'localhost',
         
         [Parameter()]
@@ -495,7 +433,68 @@ function InvokeSqlCmd
     )
     
     begin
-    {                                
+    {
+        function SplitGoStatements
+        {
+            [CmdletBinding()]
+            param
+            (
+                [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)]
+                [PSObject]$Script
+            )
+            
+            begin
+            {
+                # Ensure that statements that precede a GO statement
+                # are in their own batch since the GO statement isn't valid
+                # Transact-SQL: http://technet.microsoft.com/en-us/library/ms188037.aspx
+                $goStatementLineRegex = "^\s*?"     + # A GO line starts with possibly 0 or more spaces
+                                        "GO"        + # followed by the word "GO"
+                                        "\s*?"      + # followed by possibly 0 or more spaces
+                                        "(--.*?)?$"   # possibly ending with a comment            
+            }
+            
+            process
+            {                                
+                $sourceFilePath = $Script | GetSourceFilePath
+                $normalizedLineEndings = $Script -replace "`r`n","`n"
+                $commandBatches = $normalizedLineEndings -split $goStatementLineRegex,0,"multiline"
+                
+                # Go through each of the command batches and enrich each with line number offset
+                # information so that if an error occurs, we can accurately report the line number
+                # as it appeared in the overall script that it appeared in (i.e. when ADO.NET reports
+                # line numbers, it's going to be relative to the begining of the batch)
+                $lineOffset = 0
+                foreach($commandBatch in $commandBatches)
+                {
+                    # Ok...so since ADO.NET reports line numbers based on the first non-empty line
+                    # we need to account for how many empty lines lead up to the first non-empty line
+                    # to come up with the correct offset that ADO.NET will be basing its line numbers
+                    # off of
+                    $match = [regex]::Match($commandBatch,'[^\s]')
+                    if($match.Success)
+                    {
+                        $emptyLineCount = ($commandBatch.Substring(0, $match.Index) | Measure-Object -Line).Lines
+                        $lineOffset += $emptyLineCount
+                        
+                        # Trim off all the whitespace that ADO.NET is going to ignore anyway
+                        $commandBatch = $commandBatch.Substring($match.Index)                
+                    }
+               
+                    if(-not [string]::IsNullOrWhiteSpace($commandBatch))
+                    {
+                        # Add the line offset to the string so that the caller can calculate the line number
+                        # in the event of an error
+                        $commandBatch | 
+                            Add-Member -MemberType NoteProperty -Name LineOffset -Value $lineOffset -PassThru |
+                            AddSourceFilePath $sourceFilePath
+                    }
+                    
+                    $lineOffset += ($commandBatch | Measure-Object -Line).Lines
+                }
+            }
+        }
+        
         $connectionStringParts = @(
             "server=$ServerInstance"
             "database=$Database"
@@ -523,21 +522,22 @@ function InvokeSqlCmd
         }    
         
         $connectionString = $connectionStringParts -join ';'
-        $connection = New-Object System.Data.SqlClient.SqlConnection $connectionString
-        $connection.add_InfoMessage({ Write-Host $args[1].Message })
-        $connection.Open()
-
-        $transaction = $null
-        if($UseTransaction)
-        {
-            $transaction = $connection.BeginTransaction()
-        }        
     }
     
     process
     {
         $commandBatches = $Query | SplitGoStatements
-
+        
+        $psTransaction = $null
+        if($PSCmdlet.TransactionAvailable())
+        {
+            $psTransaction = $PSCmdlet.CurrentPSTransaction
+        }
+        
+        $connection = New-Object System.Data.SqlClient.SqlConnection $connectionString
+        $connection.add_InfoMessage({ Write-Host $args[1].Message })
+        $connection.Open()
+        
         try
         {
             $commandBatches | ForEach-Object {
@@ -551,8 +551,6 @@ $commandText
 
                 try
                 {                    
-                    $command.Transaction = $transaction
-
                     $reader = $command.ExecuteReader()
                     try
                     {
@@ -585,17 +583,6 @@ $commandText
         }
         catch
         {
-            if($transaction)
-            {
-                $transaction.Rollback()
-                $transaction.Dispose()
-            }
-            
-            if($connection)
-            {
-                $connection.Dispose()
-            }            
-
             # For usability, unwrap and throw the SQL exception
             if($_.Exception -and $_.Exception.InnerException -is [System.Data.SqlClient.SqlException])
             {
@@ -608,19 +595,14 @@ $commandText
                 throw
             }
         }
-    }
-    
-    end
-    {
-        if($transaction)
-        {
-            $transaction.Commit()            
-            $transaction.Dispose()
-        }
-        
-        if($connection)
+        finally
         {
             $connection.Dispose()
+            
+            if($psTransaction)
+            {
+                $psTransaction.Dispose()
+            }            
         }
     }
 }
