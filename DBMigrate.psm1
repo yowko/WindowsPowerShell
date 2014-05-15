@@ -209,8 +209,13 @@ END
             Write-Host "`t$($_.Name)"
         }
 
-        ApplyScripts `
-            -ScriptFilesToApply $scriptFilesToApply
+        Start-Transaction
+        GenerateQueryObjects -ScriptFilesToApply $scriptFilesToApply |
+            InvokeSqlCmd @commonSqlCmdParams -Database $Database -UseTransaction | Out-Null
+        Complete-Transaction
+        
+        Write-Host ''
+        Write-Host 'Done!'        
 
         $currentSchemaVersionProperty = GetCurrentSchemaVersionProperty
         Write-Host "Database is now at schema version $($currentSchemaVersionProperty.Value)."
@@ -286,7 +291,7 @@ END
         return $scriptFilesToApply
     }
 
-    function ApplyScripts
+    function GenerateQueryObjects
     {
         [CmdletBinding()]
         param
@@ -296,14 +301,8 @@ END
             $ScriptFilesToApply
         )
         
-        # This script block will emit SQL statements
-        # that then will be piped to InvokeSqlCmd.
-        # This will allow the contents of the scripts to be fed
-        # into InvokeSqlCmd in a "streaming" fashion (i.e we don't
-        # have to load all the files into memory at once )
-        $scriptTextProvider = {
-        
-            # Emit the SQL that creates the version history schema and table if necessary
+       
+        # Emit the SQL that creates the version history schema and table if necessary
 @"
 IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = '$VersionTableSchema')
 BEGIN
@@ -324,18 +323,17 @@ BEGIN
     )  ON [PRIMARY]
 END
 "@        
+
+        # Emit the SQL in each of the script files to apply
+        $ScriptFilesToApply | ForEach-Object {
+            $scriptFileToApply = $_
+            Write-Host ($scriptFileSeparatorFormat -f $scriptFileToApply.Name)
             
-            # Emit the SQL in each of the script files to apply
-            $ScriptFilesToApply | ForEach-Object {
-                $scriptFileToApply = $_
-                Write-Host ($scriptFileSeparatorFormat -f $scriptFileToApply.Name)
-                
-                (Get-Content $scriptFileToApply.FullName) -join "`n" |
-                    AddSourceFilePath $scriptFileToApply.FullName
-                
-                # Insert the schema version into the version history table
-                if($scriptFileToApply.SchemaVersion)
-                {
+            $scriptFileToApply
+            
+            # Insert the schema version into the version history table
+            if($scriptFileToApply.SchemaVersion)
+            {
 @"
 SET IDENTITY_INSERT $VersionTableSchema.$VersionTableName ON
 INSERT INTO $VersionTableSchema.$VersionTableName (Version,AppliedOnDateTime)
@@ -344,24 +342,15 @@ SET IDENTITY_INSERT $VersionTableSchema.$VersionTableName OFF
 "@
                 }
             }
-        }
-
-        # Make it so!
-        & $scriptTextProvider | InvokeSqlCmd @commonSqlCmdParams -Database $Database -UseTransaction | Out-Null
-
-        Write-Host ''
-        Write-Host 'Done!'
     }
 
     #endregion Supporting functions    
     
     #region Let's do this thing
 
-    Start-Transaction
     ResetDatabaseIfNecessary
     EnsureDatabaseExists
     PerformMigration
-    Complete-Transaction
 
     #endregion Let's do this thing
 }
@@ -369,45 +358,6 @@ SET IDENTITY_INSERT $VersionTableSchema.$VersionTableName OFF
 #endregion Public Functions
 
 #region Private Functions
-
-function AddSourceFilePath
-{
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
-        [PSObject]$InputObject,
-        
-        [Parameter(Position=0)]
-        [string]$SourceFilePath
-    )
-    
-    process
-    {
-        return $InputObject |
-            Add-Member -MemberType NoteProperty -Name SourceFilePath -Value $SourceFilePath -PassThru
-    }
-}
-
-function GetSourceFilePath
-{
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)]
-        [PSObject]$InputObject
-    )
-    
-    process
-    {
-        if(Get-Member -InputObject $InputObject -MemberType NoteProperty -Name SourceFilePath)
-        {
-            return $InputObject.SourceFilePath
-        }
-        
-        return $null
-    }    
-}
 
 # Prefer using ADO.NET over SQLPS' Invoke-SqlCmd
 # in order to
@@ -423,7 +373,7 @@ function InvokeSqlCmd
         [string]$Database,
 
         [Parameter(Mandatory=$true, Position=1, ValueFromPipeline=$true)]
-        [PSObject]$Query,
+        [PSObject[]]$Query,
 
         [Parameter()]
         [string]$ServerInstance = 'localhost',
@@ -434,6 +384,34 @@ function InvokeSqlCmd
     
     begin
     {
+        function UnwrapQueryObjects
+        {
+            [CmdletBinding()]
+            param
+            (
+                [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+                [PSObject]$InputObject            
+            )
+            
+            process
+            {                
+                if($InputObject -is [System.IO.FileInfo])
+                {
+                    return (Get-Content $InputObject.FullName) -join "`n" |
+                        Add-Member -MemberType NoteProperty -Name File -Value $InputObject.FullName -PassThru
+                }
+                
+                if($InputObject -is [scriptblock])
+                {
+                    return & $InputObject | UnwrapQueryObjects |
+                        Add-Member -MemberType NoteProperty -Name SourceFilePath -Value $null -PassThru
+                }
+                
+                return $InputObject |
+                    Add-Member -MemberType NoteProperty -Name SourceFilePath -Value $null -PassThru
+            }
+        }
+    
         function SplitGoStatements
         {
             [CmdletBinding()]
@@ -456,7 +434,6 @@ function InvokeSqlCmd
             
             process
             {                                
-                $sourceFilePath = $Script | GetSourceFilePath
                 $normalizedLineEndings = $Script -replace "`r`n","`n"
                 $commandBatches = $normalizedLineEndings -split $goStatementLineRegex,0,"multiline"
                 
@@ -487,7 +464,7 @@ function InvokeSqlCmd
                         # in the event of an error
                         $commandBatch | 
                             Add-Member -MemberType NoteProperty -Name LineOffset -Value $lineOffset -PassThru |
-                            AddSourceFilePath $sourceFilePath
+                            Add-Member -MemberType NoteProperty -Name SourceFilePath -Value $Script.SourceFilePath -PassThru
                     }
                     
                     $lineOffset += ($commandBatch | Measure-Object -Line).Lines
@@ -526,7 +503,7 @@ function InvokeSqlCmd
     
     process
     {
-        $commandBatches = $Query | SplitGoStatements
+        $commandBatches = $Query | UnwrapQueryObjects | SplitGoStatements
         
         $psTransaction = $null
         if($PSCmdlet.TransactionAvailable())
@@ -587,7 +564,7 @@ $commandText
             if($_.Exception -and $_.Exception.InnerException -is [System.Data.SqlClient.SqlException])
             {
                 $lineNumber = $_.Exception.InnerException.LineNumber + $commandText.LineOffset
-                $sourceFilePath = $commandText | GetSourceFilePath
+                $sourceFilePath = $commandText.SourceFilePath
                 throw "Line number: $lineNumber. Source file: $sourceFilePath. Error:  $($_.Exception.InnerException.Message)"
             }
             else
