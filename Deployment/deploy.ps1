@@ -46,17 +46,20 @@ cinst Firefox
 # To include you product key, include the following in the InstallArguments: /ProductKey:<your key here>
 cinst VisualStudio2013Premium -InstallArguments "/Features:'Blend VC_MFC_Libraries WebTools SQL WebTools Win8SDK SilverLight_Developer_Kit WindowsPhone80'"
 
-#Install PowerGUI
-cinst PowerGUI
-
 # Install ReSharper
 cinst resharper
+
+# Install Reflector
+cinst reflector
 
 # Install GitExtensions
 cinst gitextensions
 
 # Install Beyond Compare
 cinst beyondcompare
+
+#Install PowerGUI
+cinst PowerGUI
 
 # Install WebStorm
 cinst WebStorm
