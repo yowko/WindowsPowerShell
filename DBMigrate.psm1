@@ -257,13 +257,19 @@ END
 
         Write-Host "Looking in $(Resolve-Path $MigrationScriptDirectory) for versioned script files..."
 
-        $scriptFilesToApply = @(dir $MigrationScriptDirectory *.sql |
+        $versionedScriptFiles = @(dir $MigrationScriptDirectory *.sql |
             Where-Object { $_.BaseName -as [int] -is [int] } |
             ForEach-Object {
                 Write-Host "`tFound versioned script file: $($_.Name)"
                 return $_
-            } |
-            Where-Object { [int]($_.BaseName) -gt $CurrentSchemaVersionValue } |
+            })
+
+        if(-not $versionedScriptFiles)
+        {
+            Write-Warning 'No versioned script files were found!'
+        }     
+                    
+        $scriptFilesToApply = @($versionedScriptFiles | Where-Object { [int]($_.BaseName) -gt $CurrentSchemaVersionValue } |
             ForEach-Object {
                 Add-Member `
                     -InputObject $_ `
