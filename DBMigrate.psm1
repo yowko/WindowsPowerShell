@@ -404,11 +404,11 @@ function InvokeSqlCmd
                 if($InputObject -is [scriptblock])
                 {
                     return & $InputObject | UnwrapQueryObjects |
-                        Add-Member -MemberType NoteProperty -Name SourceFilePath -Value $null -PassThru
+                        Add-Member -MemberType NoteProperty -Name File -Value $null -PassThru
                 }
                 
                 return $InputObject |
-                    Add-Member -MemberType NoteProperty -Name SourceFilePath -Value $null -PassThru
+                    Add-Member -MemberType NoteProperty -Name File -Value $null -PassThru
             }
         }
     
@@ -464,7 +464,7 @@ function InvokeSqlCmd
                         # in the event of an error
                         $commandBatch | 
                             Add-Member -MemberType NoteProperty -Name LineOffset -Value $lineOffset -PassThru |
-                            Add-Member -MemberType NoteProperty -Name SourceFilePath -Value $Script.SourceFilePath -PassThru
+                            Add-Member -MemberType NoteProperty -Name File -Value $Script.File -PassThru
                     }
                     
                     $lineOffset += ($commandBatch | Measure-Object -Line).Lines
@@ -563,9 +563,14 @@ $commandText
             # For usability, unwrap and throw the SQL exception
             if($_.Exception -and $_.Exception.InnerException -is [System.Data.SqlClient.SqlException])
             {
-                $lineNumber = $_.Exception.InnerException.LineNumber + $commandText.LineOffset
-                $sourceFilePath = $commandText.SourceFilePath
-                throw "Line number: $lineNumber. Source file: $sourceFilePath. Error:  $($_.Exception.InnerException.Message)"
+                $sqlException = $_.Exception.InnerException
+                $file = $commandText.File
+                $lineNumber = $sqlException.LineNumber + $commandText.LineOffset
+
+                Write-Error `
+                    -Message "$file($lineNumber) : $($sqlException.Message)" `
+                    -Exception $sqlException `
+                    -TargetObject $commandText
             }
             else
             {
