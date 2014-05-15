@@ -330,7 +330,8 @@ END
                 $scriptFileToApply = $_
                 Write-Host ($scriptFileSeparatorFormat -f $scriptFileToApply.Name)
                 
-                (Get-Content $scriptFileToApply.FullName) -join "`n"
+                (Get-Content $scriptFileToApply.FullName) -join "`n" |
+                    AddSourceFilePath $scriptFileToApply.FullName
                 
                 # Insert the schema version into the version history table
                 if($scriptFileToApply.SchemaVersion)
@@ -369,6 +370,13 @@ SET IDENTITY_INSERT $VersionTableSchema.$VersionTableName OFF
 
 function SplitGoStatements
 {
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)]
+        [PSObject]$Script
+    )
+    
     begin
     {
         # Ensure that statements that precede a GO statement
@@ -382,17 +390,38 @@ function SplitGoStatements
     
     process
     {                                
-        $normalizedLineEndings = $_ -replace "`r`n","`n"
+        $sourceFilePath = $Script | GetSourceFilePath
+        $normalizedLineEndings = $Script -replace "`r`n","`n"
         $commandBatches = $normalizedLineEndings -split $goStatementLineRegex,0,"multiline"
         
+        # Go through each of the command batches and enrich each with line number offset
+        # information so that if an error occurs, we can accurately report the line number
+        # as it appeared in the overall script that it appeared in (i.e. when ADO.NET reports
+        # line numbers, it's going to be relative to the begining of the batch)
         $lineOffset = 0
         foreach($commandBatch in $commandBatches)
         {
+            # Ok...so since ADO.NET reports line numbers based on the first non-empty line
+            # we need to account for how many empty lines lead up to the first non-empty line
+            # to come up with the correct offset that ADO.NET will be basing its line numbers
+            # off of
+            $match = [regex]::Match($commandBatch,'[^\s]')
+            if($match.Success)
+            {
+                $emptyLineCount = ($commandBatch.Substring(0, $match.Index) | Measure-Object -Line).Lines
+                $lineOffset += $emptyLineCount
+                
+                # Trim off all the whitespace that ADO.NET is going to ignore anyway
+                $commandBatch = $commandBatch.Substring($match.Index)                
+            }
+       
             if(-not [string]::IsNullOrWhiteSpace($commandBatch))
             {
                 # Add the line offset to the string so that the caller can calculate the line number
                 # in the event of an error
-                $commandBatch | Add-Member -MemberType NoteProperty -Name LineOffset -Value $lineOffset -PassThru
+                $commandBatch | 
+                    Add-Member -MemberType NoteProperty -Name LineOffset -Value $lineOffset -PassThru |
+                    AddSourceFilePath $sourceFilePath
             }
             
             $lineOffset += ($commandBatch | Measure-Object -Line).Lines
@@ -400,9 +429,50 @@ function SplitGoStatements
     }
 }    
 
+function AddSourceFilePath
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [PSObject]$InputObject,
+        
+        [Parameter(Position=0)]
+        [string]$SourceFilePath
+    )
+    
+    process
+    {
+        return $InputObject |
+            Add-Member -MemberType NoteProperty -Name SourceFilePath -Value $SourceFilePath -PassThru
+    }
+}
+
+function GetSourceFilePath
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)]
+        [PSObject]$InputObject
+    )
+    
+    process
+    {
+        if(Get-Member -InputObject $InputObject -MemberType NoteProperty -Name SourceFilePath)
+        {
+            return $InputObject.SourceFilePath
+        }
+        
+        return $null
+    }    
+}
+
 # Prefer using ADO.NET over SQLPS' Invoke-SqlCmd
-# in order to minimize client dependencies and
-# to implement transaction support
+# in order to
+# - Minimize client dependencies and
+# - Implement transaction support
+# - Report accurate line number information in the face of GO statements
 function InvokeSqlCmd
 {
     [CmdletBinding()]
@@ -412,7 +482,7 @@ function InvokeSqlCmd
         [string]$Database,
 
         [Parameter(Mandatory=$true, Position=1, ValueFromPipeline=$true)]
-        [string[]]$Query,
+        [PSObject]$Query,
 
         [Parameter()]
         [switch]$UseTransaction,
@@ -472,16 +542,15 @@ function InvokeSqlCmd
         {
             $commandBatches | ForEach-Object {
                 $commandText = $_
-                try
-                {
-                    Write-Verbose @"
+                
+                Write-Verbose @"
 Invoking SQL Query at line offset $($commandText.LineOffset):
-
 $commandText
+"@              
+                $command = New-Object System.Data.SqlClient.SqlCommand $commandText, $connection
 
-
-"@
-                    $command = New-Object System.Data.SqlClient.SqlCommand $commandText, $connection
+                try
+                {                    
                     $command.Transaction = $transaction
 
                     $reader = $command.ExecuteReader()
@@ -530,8 +599,9 @@ $commandText
             # For usability, unwrap and throw the SQL exception
             if($_.Exception -and $_.Exception.InnerException -is [System.Data.SqlClient.SqlException])
             {
-                $lineNumber = $_.Exception.InnerException.LineNumber + $commandText.LineOffset + 1
-                throw "Line number: $lineNumber. Error:  $($_.Exception.InnerException.Message)"
+                $lineNumber = $_.Exception.InnerException.LineNumber + $commandText.LineOffset
+                $sourceFilePath = $commandText | GetSourceFilePath
+                throw "Line number: $lineNumber. Source file: $sourceFilePath. Error:  $($_.Exception.InnerException.Message)"
             }
             else
             {
