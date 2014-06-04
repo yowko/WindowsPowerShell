@@ -25,7 +25,7 @@ set-alias sudo elevate-process
 #functions
 function prompt
 {
-    set-strictmode -off
+    Set-StrictMode -Off
 
     if($null -eq $global:initial_forecolor)
     {
@@ -36,19 +36,20 @@ function prompt
         $host.UI.RawUI.ForegroundColor = $global:initial_forecolor
     }
     
-    $chunks = (get-location).Path.Split('\', [System.StringSplitOptions]::RemoveEmptyEntries)
+    $chunks = (Get-Location).Path -split '\\'
 
-    write-host "`n[$((get-date).ToString())]" -fore darkgray
+    Write-Host ''
     
     foreach($c in $chunks)
     {
-        write-host "$c" -fore darkgray -no
-        write-host "\" -fore gray -no
+        Write-Host "$c" -ForegroundColor DarkGray -NoNewline
+        Write-Host "\" -ForegroundColor Gray -NoNewline
     }
-	
-	 Write-VcsStatus
+    	
+	Write-VcsStatus
     
-    write-host "`n>" -fore darkgray -no
+    $nextHistoryId = (Get-History -Count 1).Id + 1
+    Write-Host "`n[$nextHistoryId]>" -ForegroundColor DarkGray -NoNewline
     return " "
 }
 
