@@ -21,6 +21,7 @@ set-alias n open-texteditor
 set-alias ss select-string
 set-alias dl define-location
 set-alias sudo elevate-process
+set-alias ch Clip-History
 
 #functions
 function prompt
