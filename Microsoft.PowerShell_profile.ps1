@@ -5,7 +5,7 @@ Set-StrictMode -version latest
 $profileDirectory = Split-Path $profile
 $env:path = $env:path + ";$profileDirectory"
 
-Define-Location scripts ([System.IO.Path]::GetDirectoryName($profile))
+Define-Location scripts (Split-Path $profile)
 Define-Location desk ~\Desktop
 Define-Location docs ~\Documents
 Define-Location repos ~\Documents\Projects
