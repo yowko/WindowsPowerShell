@@ -1,27 +1,27 @@
 #environment
 
-set-strictmode -version latest
+Set-StrictMode -version latest
 
 $profileDirectory = Split-Path $profile
 $env:path = $env:path + ";$profileDirectory"
 
-define-location scripts ([System.IO.Path]::GetDirectoryName($profile))
-define-location desk ~\Desktop
-define-location docs ~\Documents
-define-location repos ~\Documents\Projects
+Define-Location scripts ([System.IO.Path]::GetDirectoryName($profile))
+Define-Location desk ~\Desktop
+Define-Location docs ~\Documents
+Define-Location repos ~\Documents\Projects
 
 #aliases
-set-alias u goto-ancestor
-set-alias e open-explorer
-set-alias ">>" where-propertyvalue
-set-alias gh get-help
-set-alias cl clip-location
-set-alias fs search-code
-set-alias n open-texteditor
-set-alias ss select-string
-set-alias dl define-location
-set-alias sudo elevate-process
-set-alias ch Clip-History
+Set-Alias u Goto-Ancestor
+Set-Alias e Open-Explorer
+Set-Alias ">>" Where-PropertyValue
+Set-Alias gh Get-Help
+Set-Alias cl Clip-Location
+Set-Alias fs Search-Code
+Set-Alias n Open-TextEditor
+Set-Alias ss Select-String
+Set-Alias dl Define-Location
+Set-Alias sudo Elevate-Process
+Set-Alias ch Clip-History
 
 #functions
 function prompt
