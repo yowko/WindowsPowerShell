@@ -1,4 +1,4 @@
-param([string]$file=$(throw "Process file path required"))
+param([string]$file='powershell')
 
 [string]$arguments = $args;
 $psi = new-object System.Diagnostics.ProcessStartInfo $file;
