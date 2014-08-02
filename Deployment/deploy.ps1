@@ -31,7 +31,7 @@ Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey
 $env:PATH += ";$env:SystemDrive\chocolatey\bin"
 
 # Install PowerShell 4
-cinst powershell4
+# cinst powershell4
 
 # Install Notepad++
 cinst notepadplusplus.install
@@ -58,8 +58,8 @@ cinst gitextensions
 # Install Beyond Compare
 cinst beyondcompare
 
-#Install PowerGUI
-cinst PowerGUI
+# Install PowerGUI
+# cinst PowerGUI
 
 # Install WebStorm
 cinst WebStorm
