@@ -22,7 +22,6 @@ function GetAccessToken
     Get-LiveAccessToken -ClientId $ClientId -Secret $Secret -ProfileName $ProfileName
 }
 
-Set-StrictMode -Version latest
 $ErrorActionPreference = 'Stop'
 Import-Module Live
 
@@ -31,28 +30,42 @@ if(-not (Test-Path $DestinationDirectoryPath -PathType Container))
     mkdir $DestinationDirectoryPath | Out-Null
 }
 
-$page = "$SourceFolderId/files?limit=1"
-while($page)
+$DestinationDirectoryPath = (Resolve-Path $DestinationDirectoryPath).Path
+$webClient = New-Object System.Net.WebClient
+
+$pageUrl = "$SourceFolderId/files?limit=10"
+while($pageUrl)
 {
-    $file = Invoke-LiveRestMethod -Resource $page -AccessToken (GetAccessToken)
-    $filePath = Join-Path $DestinationDirectoryPath $file.data.name
-    $fileUrl = $file.data.images | Where-Object type -eq 'full' | ForEach-Object source
+    $page = Invoke-LiveRestMethod -Resource $pageUrl -AccessToken (GetAccessToken)
 
-    if($fileUrl)
-    {
-        Write-Host "Downloading $fileUrl to $filePath"
-        Invoke-WebRequest $fileUrl -OutFile $filePath
+    $page | ConvertTo-Json -Depth 10| Out-String | Write-Host
 
-        Write-Host "Deleting $fileUrl"
-        Invoke-LiveRestMethod $file.data.Id -Method Delete -AccessToken (GetAccessToken)
+    $page.data | ForEach-Object {
+        $file = $_
+        $filePath = Join-Path $DestinationDirectoryPath $file.name
+        $fileUrl = $file.source
+
+        if($fileUrl)
+        {
+            Write-Host "Downloading $fileUrl to $filePath"
+            $webClient.DownloadFile($fileUrl, $filePath)
+
+            if(-not (Test-Path $filePath -PathType Leaf))
+            {
+                throw "$filePath not found!"
+            }
+
+            Write-Host "Deleting $fileUrl"
+            Invoke-LiveRestMethod $file.Id -Method Delete -AccessToken (GetAccessToken)
+        }
     }
 
-    if($file.paging)
+    if($page.paging)
     {
-        $page = $file.paging.next
+        $pageUrl = $page.paging.next
     }
     else
     {
-        $page = $null
+        $pageUrl = $null
     }
 }
