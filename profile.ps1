@@ -5,6 +5,8 @@ Set-StrictMode -version latest
 $profileDirectory = Split-Path $profile
 $env:path = $env:path + ";$profileDirectory"
 
+Set-Location $profileDirectory
+
 Define-Location scripts (Split-Path $profile)
 Define-Location desk ~\Desktop
 Define-Location docs ~\Documents
