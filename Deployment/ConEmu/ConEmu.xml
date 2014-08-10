@@ -547,7 +547,7 @@
 					<value name="Name" type="string" data="{PowerShell}"/>
 					<value name="Hotkey" type="dword" data="00000000"/>
 					<value name="GuiArgs" type="string" data=""/>
-					<value name="Cmd1" type="string" data="powershell.exe -new_console:d:C:\Users\Rafael\Documents\WindowsPowerShell"/>
+					<value name="Cmd1" type="string" data="powershell.exe -new_console:d:%USERPROFILE%\Documents\WindowsPowerShell"/>
 					<value name="Active" type="dword" data="00000000"/>
 					<value name="Count" type="dword" data="00000001"/>
 				</key>
