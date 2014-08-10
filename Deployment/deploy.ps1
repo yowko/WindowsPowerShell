@@ -33,6 +33,9 @@ $env:PATH += ";$env:SystemDrive\chocolatey\bin"
 # Install PowerShell 4
 # cinst powershell4
 
+# Install ConEmu
+cinst conemu
+
 # Install Notepad++
 cinst notepadplusplus.install
 
