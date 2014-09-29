@@ -64,3 +64,7 @@ $global:GitPromptSettings.UntrackedForegroundColor = [ConsoleColor]::Red
 # Load posh-git example profile
 # . 'C:\Users\Rafael\Documents\WindowsPowerShell\Modules\posh-git\profile.example.ps1'
 
+if ($host.Name -eq 'ConsoleHost')
+{
+    Import-Module PSReadline
+}
