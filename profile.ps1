@@ -67,4 +67,5 @@ $global:GitPromptSettings.UntrackedForegroundColor = [ConsoleColor]::Red
 if ($host.Name -eq 'ConsoleHost')
 {
     Import-Module PSReadline
+    Initialize-PSReadLineKeyHandler
 }
