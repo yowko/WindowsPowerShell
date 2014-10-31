@@ -1,7 +1,7 @@
 param
 (
     $Version = '12',
-    $Platform = 'x64'
+    $Platform = 'x86'
 )
 
 $ErrorActionPreference = 'Stop'
