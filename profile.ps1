@@ -24,6 +24,7 @@ Set-Alias ss Select-String
 Set-Alias dl Define-Location
 Set-Alias sudo Elevate-Process
 Set-Alias ch Clip-History
+Set-Alias sw Search-Web
 
 #functions
 function prompt
