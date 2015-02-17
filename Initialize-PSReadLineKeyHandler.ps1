@@ -1,3 +1,4 @@
+<#
 Set-PSReadlineKeyHandler -Key '"',"'" `
                          -BriefDescription SmartInsertQuote `
                          -LongDescription "Insert paired quotes if not already on a quote" `
@@ -28,9 +29,9 @@ Set-PSReadlineKeyHandler -Key '(','{','[' `
 
     $closeChar = switch ($key.KeyChar) 
     { 
-	   <#case#> '(' { [char]')'; break } 
-	   <#case#> '{' { [char]'}'; break } 
-	   <#case#> '[' { [char]']'; break } 
+	   '(' { [char]')'; break } 
+	   '{' { [char]'}'; break } 
+	   '[' { [char]']'; break } 
 	} 
 
 
@@ -79,11 +80,11 @@ Set-PSReadlineKeyHandler -Key Backspace `
         $toMatch = $null
         switch ($line[$previous])
         {
-            <#case#> '"' { $toMatch = '"'; break }
-            <#case#> "'" { $toMatch = "'"; break }
-            <#case#> ')' { $toMatch = '('; break }
-            <#case#> ']' { $toMatch = '['; break }
-            <#case#> '}' { $toMatch = '{'; break }
+            '"' { $toMatch = '"'; break }
+            "'" { $toMatch = "'"; break }
+            ')' { $toMatch = '('; break }
+            ']' { $toMatch = '['; break }
+            '}' { $toMatch = '{'; break }
         }
 
         if ($previousPrevious -gt -1 -and $toMatch -ne $null -and $line[$previousPrevious] -eq $toMatch)
@@ -96,6 +97,7 @@ Set-PSReadlineKeyHandler -Key Backspace `
         }
     }
 }
+#>
 
 Set-PSReadlineKeyHandler -Key Ctrl+Shift+v `
                          -BriefDescription PasteAsHereString `
