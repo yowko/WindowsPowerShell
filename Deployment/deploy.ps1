@@ -79,6 +79,9 @@ cinst paint.net
 # Install WinDbg
 cinst windbg
 
+# Install Screenpresso
+cinst screenpresso
+
 # Configure IIS
 # cinst IIS-WebServerRole -source windowsfeatures 
 # cinst IIS-ISAPIFilter -source windowsfeatures 
