@@ -82,6 +82,8 @@ cinst windbg
 # Install Screenpresso
 cinst screenpresso
 
+cinst icofx2 
+
 # Configure IIS
 # cinst IIS-WebServerRole -source windowsfeatures 
 # cinst IIS-ISAPIFilter -source windowsfeatures 
