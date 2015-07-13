@@ -84,6 +84,9 @@ cinst screenpresso
 
 cinst icofx2 
 
+cinst 7zip
+cinst ffmpeg
+
 # Configure IIS
 # cinst IIS-WebServerRole -source windowsfeatures 
 # cinst IIS-ISAPIFilter -source windowsfeatures 

@@ -4,6 +4,7 @@ Set-StrictMode -version latest
 
 $profileDirectory = Split-Path $profile
 $env:path = $env:path + ";$profileDirectory"
+$env:path = $env:path + ";$profileDirectory\bin"
 
 Set-Location $profileDirectory
 
