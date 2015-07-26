@@ -8,17 +8,17 @@
 	autocrlf = false
 	editor = 'C:/Program Files (x86)/Notepad++/notepad++.exe' -multiInst -nosession -noPlugin
 [diff]
-	tool = bc3
-	guitool = beyondcompare3
-[difftool "bc3"]
-	cmd = \"c:/program files (x86)/beyond compare 3/bcomp.exe\" \"$LOCAL\" \"$REMOTE\"
-	path = c:/program files (x86)/beyond compare 3/bcomp.exe
+	tool = bc4
+	guitool = beyondcompare4
+[difftool "bc4"]
+	cmd = \"c:/program files (x86)/beyond compare 4/bcomp.exe\" \"$LOCAL\" \"$REMOTE\"
+	path = c:/program files (x86)/beyond compare 4/bcomp.exe
 [difftool]
 	prompt = false
 [merge]
-	tool = BeyondCompare3
-[mergetool "bc3"]
-	cmd = \"c:/program files (x86)/beyond compare 3/bcomp.exe\" \"$LOCAL\" \"$REMOTE\" \"$BASE\" \"$MERGED\"
+	tool = BeyondCompare4
+[mergetool "bc4"]
+	cmd = \"c:/program files (x86)/beyond compare 4/bcomp.exe\" \"$LOCAL\" \"$REMOTE\" \"$BASE\" \"$MERGED\"
 	trustExitCode = true
 [mergetool]
 	keepBackup = false
@@ -26,14 +26,14 @@
 [credential]
 	# helper = !\"C:/Program Files (x86)/GitExtensions/GitCredentialWinStore/git-credential-winstore.exe\"
     helper = wincred
-[difftool "BeyondCompare3"]
-	path = C:/Program Files (x86)/Beyond Compare 3/bcomp.exe
-[difftool "beyondcompare3"]
-	path = C:/Program Files (x86)/Beyond Compare 3/bcomp.exe
-	cmd = \"C:/Program Files (x86)/Beyond Compare 3/bcomp.exe\" \"$LOCAL\" \"$REMOTE\"
-[mergetool "BeyondCompare3"]
-	path = C:/Program Files (x86)/Beyond Compare 3/bcomp.exe
-	cmd = \"C:/Program Files (x86)/Beyond Compare 3/bcomp.exe\" \"$LOCAL\" \"$REMOTE\" \"$BASE\" \"$MERGED\"
+[difftool "BeyondCompare4"]
+	path = C:/Program Files (x86)/beyond compare 4/bcomp.exe
+[difftool "beyondcompare4"]
+	path = C:/Program Files (x86)/beyond compare 4/bcomp.exe
+	cmd = \"C:/Program Files (x86)/beyond compare 4/bcomp.exe\" \"$LOCAL\" \"$REMOTE\"
+[mergetool "BeyondCompare4"]
+	path = C:/Program Files (x86)/beyond compare 4/bcomp.exe
+	cmd = \"C:/Program Files (x86)/beyond compare 4/bcomp.exe\" \"$LOCAL\" \"$REMOTE\" \"$BASE\" \"$MERGED\"
 [push]
 	default = simple
 [alias]
