@@ -89,6 +89,12 @@ cinst ffmpeg
 
 cinst brackets
 
+cinst crashplan
+
+cinst truecrypt
+
+cinst nodejs.install
+
 # Configure IIS
 # cinst IIS-WebServerRole -source windowsfeatures 
 # cinst IIS-ISAPIFilter -source windowsfeatures 
