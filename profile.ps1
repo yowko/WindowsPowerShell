@@ -71,3 +71,9 @@ if ($PSVersionTable.PSVersion -gt [System.Version]'2.0' -and $host.Name -eq 'Con
     Import-Module PSReadline
     Initialize-PSReadLineKeyHandler
 }
+
+if (Get-Command choco -ErrorAction SilentlyContinue) {
+    choco feature enable -n allowGlobalConfirmation | Out-Null
+}
+
+

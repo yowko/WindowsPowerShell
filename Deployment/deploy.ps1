@@ -30,6 +30,8 @@ pause
 Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 $env:PATH += ";$env:SystemDrive\chocolatey\bin"
 
+choco feature enable -n allowGlobalConfirmation
+
 # Install PowerShell 4
 # cinst powershell4
 
