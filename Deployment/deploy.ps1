@@ -47,15 +47,6 @@ cinst GoogleChrome
 # Install Firefox
 cinst Firefox
 
-# Install VS2013 Premium
-# To include you product key, include the following in the InstallArguments: /ProductKey:<your key here>
-cinst VisualStudio2013Premium -InstallArguments "/Features:'Blend VC_MFC_Libraries WebTools SQL WebTools Win8SDK SilverLight_Developer_Kit WindowsPhone80'"
-
-# Install ReSharper
-cinst resharper
-
-# Install Reflector
-cinst reflector
 
 # Install GitExtensions
 cinst gitextensions
@@ -96,6 +87,16 @@ cinst crashplan
 cinst truecrypt
 
 cinst nodejs.install
+
+# Install VS2013 Premium
+# To include you product key, include the following in the InstallArguments: /ProductKey:<your key here>
+# cinst VisualStudio2013Premium -InstallArguments "/Features:'Blend VC_MFC_Libraries WebTools SQL WebTools Win8SDK SilverLight_Developer_Kit WindowsPhone80'"
+
+# Install ReSharper
+# cinst resharper
+
+# Install Reflector
+# cinst reflector
 
 # Configure IIS
 # cinst IIS-WebServerRole -source windowsfeatures 
