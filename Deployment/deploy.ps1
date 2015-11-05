@@ -53,9 +53,9 @@ cinst GoogleChrome
 # Install Firefox
 cinst Firefox
 
-
 # Install GitExtensions
 cinst gitextensions
+cinst git-credential-winstore
 
 # Install Beyond Compare
 cinst beyondcompare
