@@ -14,7 +14,7 @@ Set-LocationAlias docs ~\Documents
 Set-LocationAlias repos ~\Documents\Projects
 
 #aliases
-Set-Alias u Goto-Ancestor
+Set-Alias u Set-LocationAncestor
 Set-Alias e Open-Explorer
 Set-Alias ">>" Where-PropertyValue
 Set-Alias gh Get-Help
