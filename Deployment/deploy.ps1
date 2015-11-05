@@ -37,6 +37,7 @@ choco feature enable -n allowGlobalConfirmation
 
 # Install ConEmu
 cinst conemu
+Copy-Item "$(Split-Path $PROFILE)\Deployment\ConEmu\ConEmu.xml" "$($env:APPDATA)\ConEmu.xml" -Force
 
 # Install Notepad++
 cinst notepadplusplus.install
