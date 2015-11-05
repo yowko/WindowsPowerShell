@@ -1,4 +1,5 @@
 $texteditors = @(
+    "$($env:programfiles)\Sublime Text 3\sublime_text.exe"
     "$($env:programfiles)\Notepad++\notepad++.exe"
     "${env:ProgramFiles(x86)}\Notepad++\notepad++.exe"
     "$($env:programfiles)\TextPad 5\TextPad.exe"

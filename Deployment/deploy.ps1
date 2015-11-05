@@ -41,6 +41,12 @@ cinst conemu
 # Install Notepad++
 cinst notepadplusplus.install
 
+# Install sublime
+mkdir "$($env:APPDATA)\Sublime Text 3\Packages" -Force | Out-Null
+Invoke-Expression "cmd /c mklink /D '$($env:APPDATA)\Sublime Text 3\Packages\User' '$(Split-Path $PROFILE)\Deployment\Sublime\Packages\User'"
+cinst sublimetext3
+cinst sublimetext3.packagecontrol
+
 # Install Chrome
 cinst GoogleChrome
 

@@ -1,0 +1,15 @@
+{
+	"bootstrapped": true,
+	"in_process_packages":
+	[
+	],
+	"install_prereleases":
+	{
+		"IsPresent": false
+	},
+	"installed_packages":
+	[
+		"Package Control",
+		"PowerShell"
+	]
+}

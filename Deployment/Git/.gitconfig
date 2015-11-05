@@ -6,7 +6,7 @@
 	ui = auto
 [core]
 	autocrlf = false
-	editor = 'C:/Program Files (x86)/Notepad++/notepad++.exe' -multiInst -nosession -noPlugin
+	editor = 'c:/program files/sublime text 3/subl.exe' -n -w
 [diff]
 	tool = bc4
 	guitool = beyondcompare4
