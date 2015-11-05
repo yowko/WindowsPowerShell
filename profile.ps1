@@ -8,10 +8,10 @@ $env:path = $env:path + ";$profileDirectory\bin"
 
 Set-Location $profileDirectory
 
-Define-Location scripts (Split-Path $profile)
-Define-Location desk ~\Desktop
-Define-Location docs ~\Documents
-Define-Location repos ~\Documents\Projects
+Set-LocationAlias scripts (Split-Path $profile)
+Set-LocationAlias desk ~\Desktop
+Set-LocationAlias docs ~\Documents
+Set-LocationAlias repos ~\Documents\Projects
 
 #aliases
 Set-Alias u Goto-Ancestor
@@ -22,7 +22,7 @@ Set-Alias cl Clip-Location
 Set-Alias fs Search-Code
 Set-Alias n Open-TextEditor
 Set-Alias ss Select-String
-Set-Alias dl Define-Location
+Set-Alias dl Set-LocationAlias
 Set-Alias sudo Elevate-Process
 Set-Alias ch Clip-History
 Set-Alias sw Search-Web
