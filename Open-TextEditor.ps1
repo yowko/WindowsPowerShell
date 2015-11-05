@@ -1,23 +1,26 @@
-param([string]$file="")
+param([string]$File="")
 
-if($file -and -not (Test-Path $file))
+if($File -and -not (Test-Path $File))
 {
-    '' | Set-Content -Path $file -Encoding Ascii
-}
+    if(-not (Test-Path $File))
+    {
+        '' | Set-Content -Path $File -Encoding Ascii
+    }
 
-$file = Resolve-Path $file
+    $File = Resolve-Path $File
+}
 
 if(Test-Path variable:\psISE)
 {
-    psEdit $file
+    psEdit $File
     return
 }
 
 if(Test-Path variable:\PGSE)
 {
-    $PGSE.DocumentWindows.Add($file)
+    $PGSE.DocumentWindows.Add($File)
     return 
 }
 
 $texteditor = Get-TextEditor;
-Invoke-Expression "&`"$texteditor`" `"$file`""
+Invoke-Expression "&`"$texteditor`" `"$File`""
