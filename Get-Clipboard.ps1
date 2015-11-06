@@ -1,1 +1,0 @@
-powershell -sta {add-type -assembly system.windows.forms; [windows.forms.clipboard]::gettext()}

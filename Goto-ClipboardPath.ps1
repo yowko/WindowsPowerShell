@@ -1,1 +1,0 @@
-push-location ((get-clipboard).Trim("`""))
