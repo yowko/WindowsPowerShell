@@ -18,13 +18,13 @@ Set-Alias u Set-LocationAncestor
 Set-Alias e Open-Explorer
 Set-Alias ">>" Where-PropertyValue
 Set-Alias gh Get-Help
-Set-Alias cl Clip-Location
+Set-Alias cl Copy-LocationToClipboard
 Set-Alias fs Search-Code
 Set-Alias n Open-TextEditor
 Set-Alias ss Select-String
 Set-Alias dl Set-LocationAlias
 Set-Alias sudo Elevate-Process
-Set-Alias ch Clip-History
+Set-Alias ch Copy-HistoryToClipboard
 Set-Alias sw Search-Web
 
 #functions
