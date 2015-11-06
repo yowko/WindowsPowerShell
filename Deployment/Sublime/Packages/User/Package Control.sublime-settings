@@ -9,6 +9,8 @@
 	},
 	"installed_packages":
 	[
+		"AngularJS",
+		"AngularJS Snippets",
 		"Package Control",
 		"PowerShell",
 		"Theme - Spacegray"
