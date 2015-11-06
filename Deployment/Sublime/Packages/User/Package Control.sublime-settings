@@ -10,6 +10,7 @@
 	"installed_packages":
 	[
 		"Package Control",
-		"PowerShell"
+		"PowerShell",
+		"Theme - Spacegray"
 	]
 }

@@ -1,8 +1,10 @@
 {
-    "ignored_packages":
-    [
-        "Vintage"
-    ],
-    "translate_tabs_to_spaces": true,
-    "draw_white_space": "selection"
+	"color_scheme": "Packages/Theme - Spacegray/base16-eighties.dark.tmTheme",
+	"draw_white_space": "selection",
+	"ignored_packages":
+	[
+		"Vintage"
+	],
+	"theme": "Spacegray.sublime-theme",
+	"translate_tabs_to_spaces": true
 }
