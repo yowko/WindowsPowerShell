@@ -1,6 +1,5 @@
 [CmdletBinding()]
-param
-(
+param (
     [Parameter(Mandatory=$true)]
     [string]$SourceFolderId,
 
@@ -17,16 +16,14 @@ param
     [string]$ProfileName
 )
 
-function GetAccessToken
-{
+function GetAccessToken {
     Get-LiveAccessToken -ClientId $ClientId -Secret $Secret -ProfileName $ProfileName
 }
 
 $ErrorActionPreference = 'Stop'
 Import-Module Live
 
-if(-not (Test-Path $DestinationDirectoryPath -PathType Container))
-{
+if (-not (Test-Path $DestinationDirectoryPath -PathType Container)) {
     mkdir $DestinationDirectoryPath | Out-Null
 }
 
@@ -34,8 +31,7 @@ $DestinationDirectoryPath = (Resolve-Path $DestinationDirectoryPath).Path
 $webClient = New-Object System.Net.WebClient
 
 $pageUrl = "$SourceFolderId/files?limit=10"
-while($pageUrl)
-{
+while($pageUrl) {
     $page = Invoke-LiveRestMethod -Resource $pageUrl -AccessToken (GetAccessToken)
 
     $page | ConvertTo-Json -Depth 10| Out-String | Write-Host
@@ -45,13 +41,11 @@ while($pageUrl)
         $filePath = Join-Path $DestinationDirectoryPath $file.name
         $fileUrl = $file.source
 
-        if($fileUrl)
-        {
+        if ($fileUrl) {
             Write-Host "Downloading $fileUrl to $filePath"
             $webClient.DownloadFile($fileUrl, $filePath)
 
-            if(-not (Test-Path $filePath -PathType Leaf))
-            {
+            if (-not (Test-Path $filePath -PathType Leaf)) {
                 throw "$filePath not found!"
             }
 
@@ -60,12 +54,9 @@ while($pageUrl)
         }
     }
 
-    if($page.paging)
-    {
+    if ($page.paging) {
         $pageUrl = $page.paging.next
-    }
-    else
-    {
+    } else {
         $pageUrl = $null
     }
 }

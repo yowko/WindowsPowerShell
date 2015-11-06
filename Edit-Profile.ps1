@@ -1,14 +1,10 @@
-param
-(
+param (
     [switch]$HostSpecific
 )
 
-if($HostSpecific)
-{
+if ($HostSpecific) {
     $profileFilePath = $PROFILE
-}
-else
-{
+} else {
     $profileFilePath = Join-Path (Split-Path $PROFILE) 'profile.ps1'
 }
 

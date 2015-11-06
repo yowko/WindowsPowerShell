@@ -8,10 +8,8 @@ $texteditors = @(
     "${env:ProgramFiles(x86)}\Notepad2\notepad2.exe"
 )
 
-foreach($te in $texteditors)
-{
-    if([System.IO.File]::Exists($te))
-    {
+foreach ($te in $texteditors) {
+    if([System.IO.File]::Exists($te)) {
         $te;
         return;
     }

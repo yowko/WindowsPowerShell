@@ -1,26 +1,25 @@
-param([string]$File="")
+[CmdletBinding()]param (
+    [Parameter(Position = 0)]
+    $FilePath = '*'
+)
 
-if($File -and -not (Test-Path $File))
-{
-    if(-not (Test-Path $File))
-    {
-        '' | Set-Content -Path $File -Encoding Ascii
+if ($FilePath -and -not (Test-Path $FilePath)) {
+    if (-not (Test-Path $FilePath)) {
+        '' | Set-Content -Path $FilePath -Encoding Ascii
     }
 
-    $File = Resolve-Path $File
+    $FilePath = Resolve-Path $FilePath
 }
 
-if(Test-Path variable:\psISE)
-{
-    psEdit $File
+if (Test-Path variable:\psISE) {
+    psEdit $FilePath
     return
 }
 
-if(Test-Path variable:\PGSE)
-{
-    $PGSE.DocumentWindows.Add($File)
+if (Test-Path variable:\PGSE) {
+    $PGSE.DocumentWindows.Add($FilePath)
     return 
 }
 
 $texteditor = Get-TextEditor;
-Invoke-Expression "&`"$texteditor`" `"$File`""
+Invoke-Expression "&`"$texteditor`" `"$FilePath`""

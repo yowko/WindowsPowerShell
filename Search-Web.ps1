@@ -1,5 +1,4 @@
-param
-(
+param (
     [Parameter(Mandatory=$true)]
     $Search
 )

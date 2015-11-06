@@ -1,5 +1,19 @@
-param([string]$path=$(throw "File path required"), [string]$ext=$(throw "Extension required"))
+[CmdletBinding()]
+param (
+    [Parameter(
+        Position = 0,
+        Mandatory = $true,
+        ValueFromPipeline = $true,
+        ValueFromPipelineByPropertyName = $true)]
+    [Alias("FullName")]
+    [string]$FilePath,
 
-$newName = [System.IO.Path]::GetFileName($path)
-$newName = [System.IO.Path]::GetFileNameWithoutExtension($newName) + "." + $ext
-rename-item $path $newName
+    [Parameter(
+        Position = 1,
+        Mandatory = $true)]
+    [string]$Extension
+)
+
+$newName = [System.IO.Path]::GetFileName($FilePath)
+$newName = [System.IO.Path]::GetFileNameWithoutExtension($newName) + "." + $Extension
+Rename-Item $FilePath $newName

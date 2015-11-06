@@ -1,8 +1,7 @@
 Get-ChildItem -Directory |
     Where-Object Name -match '(?<year>^\d\d\d\d)-' |
     ForEach-Object {
-        if(!(Test-Path $Matches.year))
-        {
+        if (!(Test-Path $Matches.year)) {
             mkdir $Matches.year
         }
         

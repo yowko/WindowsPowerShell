@@ -1,13 +1,12 @@
-param
-(
-    [Parameter(ValueFromPipeline=$true, Mandatory=$true, Position= 0)]
+param (
+    [Parameter(
+        ValueFromPipeline=$true, 
+        Mandatory=$true, Position= 0)]
     $Xml
 )
 
-process
-{
-    if($Xml -is [xml])
-    {
+process {
+    if ($Xml -is [xml]) {
         $Xml = $Xml.OuterXml
     }
 

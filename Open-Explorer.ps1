@@ -1,2 +1,6 @@
-param([string]$location=".")
-explorer.exe $location
+[CmdletBinding()]param (
+    [Parameter(Position = 0)]
+    $Location = '*'
+)
+
+explorer.exe $Location

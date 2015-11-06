@@ -1,5 +1,4 @@
-param
-(
+param (
     [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
     $InputObject,
     
@@ -11,30 +10,20 @@ param
     [switch]$Match
 )
 
-process
-{
-    if(-not $Property)
-    {
+process {
+    if (-not $Property) {
         $inputObjectProperties = ($InputObject | get-member -membertype property | foreach{$_.Name})
-    }        
-    else
-    {
+    } else {
         $inputObjectProperties = $Property
     }
 
-    foreach ($inputObjectProperty in $inputObjectProperties)
-    {
-        if($Match)
-        {
-            if($InputObject.$inputObjectProperty -match $ValuePattern)
-            {
+    foreach ($inputObjectProperty in $inputObjectProperties) {
+        if ($Match) {
+            if ($InputObject.$inputObjectProperty -match $ValuePattern) {
                 return $InputObject
             }                
-        }
-        else
-        {
-            if($InputObject.$inputObjectProperty -like $ValuePattern)
-            {
+        } else {
+            if ($InputObject.$inputObjectProperty -like $ValuePattern) {
                 return $InputObject
             }                       
         }

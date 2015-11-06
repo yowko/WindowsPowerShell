@@ -1,5 +1,4 @@
-param
-(
+param (
     $Version = '12',
     $Platform = 'x86'
 )

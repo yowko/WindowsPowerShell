@@ -1,1 +1,1 @@
-(get-location).path | clip
+(Get-Location).path | clip

@@ -28,16 +28,12 @@ Set-Alias ch Clip-History
 Set-Alias sw Search-Web
 
 #functions
-function prompt
-{
+function prompt {
     Set-StrictMode -Off
 
-    if($null -eq $global:initial_forecolor)
-    {
+    if ($null -eq $global:initial_forecolor) {
         $global:initial_forecolor = $host.UI.RawUI.ForegroundColor
-    }
-    else
-    {
+    } else {
         $host.UI.RawUI.ForegroundColor = $global:initial_forecolor
     }
     
@@ -45,8 +41,7 @@ function prompt
 
     Write-Host ''
     
-    foreach($c in $chunks)
-    {
+    foreach ($c in $chunks) {
         Write-Host "$c" -ForegroundColor DarkGray -NoNewline
         Write-Host "\" -ForegroundColor Gray -NoNewline
     }
@@ -63,8 +58,7 @@ Import-Module posh-git
 # Load posh-git example profile
 # . 'C:\Users\Rafael\Documents\WindowsPowerShell\Modules\posh-git\profile.example.ps1'
 
-if ($PSVersionTable.PSVersion -gt [System.Version]'2.0' -and $host.Name -eq 'ConsoleHost')
-{
+if ($PSVersionTable.PSVersion -gt [System.Version]'2.0' -and $host.Name -eq 'ConsoleHost') {
     Import-Module PSReadline
     Initialize-PSReadLineKeyHandler
 }

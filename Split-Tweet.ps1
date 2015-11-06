@@ -1,6 +1,5 @@
 ﻿[CmdletBinding()]
-param
-(
+param (
     [Parameter(Mandatory=$true, Position=0)]
     [string]
     $Recipient,
@@ -10,8 +9,7 @@ param
     $Message
 )
 
-if(-not $Recipient.StartsWith('@'))
-{
+if (-not $Recipient.StartsWith('@')) {
     $Recipient = '@' + $Recipient
 }
 
@@ -21,10 +19,8 @@ $words = $Message -split ' '
 $lines = New-Object System.Collections.Generic.List[string]
 $currentLine = ''
 
-foreach($word in $words)
-{
-    if(($currentLine.Length + $word.Length + 1) -gt $messageLimit)
-    {
+foreach ($word in $words) {
+    if (($currentLine.Length + $word.Length + 1) -gt $messageLimit) {
         $lines.Add($currentLine)
         $currentLine = ''
     }
@@ -34,8 +30,7 @@ foreach($word in $words)
 
 $lines.Add($currentLine)
 
-for($i = 0; $i -lt $lines.Count; ++$i)
-{
+for ($i = 0; $i -lt $lines.Count; ++$i) {
     "$Recipient ($($i + 1)/$($lines.Count))$($lines[$i])"
 }
 
