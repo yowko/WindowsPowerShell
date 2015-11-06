@@ -1,6 +1,6 @@
 [CmdletBinding()]param (
     [Parameter(Position = 0)]
-    $Location = '*'
+    $Location = '.'
 )
 
 explorer.exe $Location
