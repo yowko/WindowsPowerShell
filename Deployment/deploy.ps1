@@ -95,6 +95,10 @@ cinst truecrypt
 
 cinst nodejs.install
 
+cinst ruby
+cinst ruby2.devkit
+gem install bundler
+
 # Install VS2013 Premium
 # To include you product key, include the following in the InstallArguments: /ProductKey:<your key here>
 # cinst VisualStudio2013Premium -InstallArguments "/Features:'Blend VC_MFC_Libraries WebTools SQL WebTools Win8SDK SilverLight_Developer_Kit WindowsPhone80'"
